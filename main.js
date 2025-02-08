@@ -42,7 +42,6 @@ async function getProxyFromFile() {
     }
 }
 
-getProxyFromFile().then(proxy => console.log("Proxy yang digunakan:", proxy));
 async function main() {  
     const accessToken = await readAccessToken();  
     const id8 = await askQuestion("Enter your first 8 browserID: ");  
