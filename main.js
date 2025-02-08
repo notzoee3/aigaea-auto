@@ -33,21 +33,20 @@ async function readAccessToken() {
 
 async function getProxyFromAPI() {  
     try {  
-        const response = await fetch('https://proxyscrape.com/api/v1?request=getproxies&protocol=http&ssl=yes&timeout=10000');  
-        const data = await response.text(); // Gunakan text(), bukan json()
-        
-        if (!data || data.startsWith("<!DOCTYPE")) {
-            throw new Error("API mengembalikan HTML, bukan daftar proxy.");
-        }
+        const response = await fetch('https://proxylist.geonode.com/api/proxy-list?limit=10&page=1&sort_by=lastChecked&sort_type=desc');  
+        const data = await response.json();  
 
-        const proxies = data.trim().split("\n").filter(proxy => proxy); // Pisahkan menjadi array
+        if (!data.data || data.data.length === 0) {  
+            throw new Error("Tidak ada proxy yang tersedia.");
+        }  
+
+        const proxies = data.data.map(p => `${p.ip}:${p.port}`);
         return proxies.length > 0 ? proxies[Math.floor(Math.random() * proxies.length)] : null;  
     } catch (error) {  
         console.error('Gagal mengambil proxy dari API:', error.message);  
         return null;  
     }  
 }
-
 async function main() {  
     const accessToken = await readAccessToken();  
     const id8 = await askQuestion("Enter your first 8 browserID: ");  
