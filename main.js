@@ -1,8 +1,9 @@
 (async () => {
+    // Impor modul menggunakan ES Modules
     const fetch = (await import('node-fetch')).default;
-    const { HttpsProxyAgent } = require('https-proxy-agent');
-    const crypto = require('crypto');
-    const fs = require('fs').promises;
+    const { HttpsProxyAgent } = await import('https-proxy-agent');
+    const crypto = await import('crypto');
+    const fs = await import('fs').promises;
 
     async function readFileContent(fileName) {
         try {
@@ -24,9 +25,9 @@
 
     async function getProxyFromAPI() {
         try {
-            const response = await fetch('https://proxyscrape.com/api/v1?request=getproxies&protocol=http&ssl=yes&timeout=10000'); // Ganti dengan URL API penyedia proxy Anda
+            const response = await fetch('https://proxyscrape.com/api/v1?request=getproxies&protocol=http&ssl=yes&timeout=10000');
             const data = await response.json();
-            return data.proxy; // Pastikan API mengembalikan format proxy yang benar
+            return data.proxy;
         } catch (error) {
             console.error('Gagal mengambil proxy dari API:', error);
             return null;
@@ -36,7 +37,6 @@
     async function coday(url, method, payloadData = null, proxy, headers) {
         try {
             const agent = new HttpsProxyAgent(proxy);
-            let response;
             const options = {
                 method: method,
                 headers: headers,
@@ -47,7 +47,7 @@
                 options.body = JSON.stringify(payloadData);
             }
 
-            response = await fetch(url, options);
+            const response = await fetch(url, options);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
             return await response.json();
