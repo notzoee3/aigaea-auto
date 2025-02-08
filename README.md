@@ -13,12 +13,9 @@ git clone https://github.com/notzoee3/aigaea-auto.git
 1. Cara mendapatkan token
 mengunakan local storage
 
-Buka DevTools (F12 atau Ctrl + Shift + I)
-Pergi ke tab Console
-```
-console.log(localStorage);
-```
-
+Buka DevTools 
+format token eyy
+format browser id 8 digit
 
 2. Untuk memasukkan akses token & browser id
 
