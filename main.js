@@ -34,17 +34,27 @@ async function readAccessToken() {
 async function getProxyFromFile() {
     try {
         const data = await fs.readFile('proxies.txt', 'utf-8');
-        const proxies = data.split('\n').map(p => p.trim()).filter(p => p);
-        return proxies.length > 0 ? proxies[Math.floor(Math.random() * proxies.length)] : null;
+        const proxies = data.split('\n').map(proxy => proxy.trim()).filter(proxy => proxy);
+        if (proxies.length === 0) throw new Error("File proxies.txt kosong.");
+        return proxies[Math.floor(Math.random() * proxies.length)]; // Pilih proxy acak
     } catch (error) {
-        console.error("Gagal membaca proxies.txt:", error);
+        console.error('Gagal membaca proxies.txt:', error);
         return null;
     }
 }
 
-async function main() {  
-    const accessToken = await readAccessToken();  
-    const id8 = await askQuestion("Enter your first 8 browserID: ");  
+async function main() {
+    const accessToken = await readAccessToken();
+    const id8 = await askQuestion("Enter your first 8 browserID: ");
+
+    let proxy = await getProxyFromFile();  // Gunakan proxy dari file
+    if (!proxy) {
+        console.error("Tidak ada proxy yang tersedia dalam file proxies.txt.");
+        return;
+    }
+
+    await handleAuthAndPing(proxy);
+}
 
     let headers = {  
         'Accept': 'application/json, text/plain, */*',  
