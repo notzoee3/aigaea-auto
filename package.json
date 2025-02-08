@@ -1,25 +1,19 @@
 {
-  "name": "proxy-automation",
+  "name": "proxy-script",
   "version": "1.0.0",
-  "description": "Automated proxy rotation script for authentication and pinging",
+  "description": "Script otomatis dengan proxy rotasi",
   "main": "script.js",
   "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.3.1",
+    "https-proxy-agent": "^7.0.2",
+    "base-64": "^1.0.0"
+  },
+  "devDependencies": {},
   "scripts": {
     "start": "node script.js"
   },
-  "dependencies": {
-    "node-fetch": "^2.6.7",
-    "https-proxy-agent": "^5.0.1"
-  },
-  "engines": {
-    "node": ">=16"
-  },
-  "keywords": [
-    "proxy",
-    "automation",
-    "nodejs",
-    "rotation"
-  ],
-  "author": "Denputtt",
+  "keywords": ["proxy", "automation", "fetch"],
+  "author": "User",
   "license": "MIT"
 }
