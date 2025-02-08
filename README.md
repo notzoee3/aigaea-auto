@@ -34,6 +34,7 @@ Masukkan token, lalu tekan CTRL + X, Y, dan Enter.
 
 ```
 npm install
+npm install node-fetch https-proxy-agent
 ```
 
 
