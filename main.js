@@ -1,10 +1,14 @@
-(async () => {
-const fetch = (await import('node-fetch')).default;
-const fs = require('fs').promises;
-const { HttpsProxyAgent } = require('https-proxy-agent');
-const path = require('path');
-const readline = require('readline');
-const crypto = require('crypto');
+import fetch from 'node-fetch';
+import fs from 'fs/promises';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import path from 'path';
+import readline from 'readline';
+import crypto from 'crypto';
+import { fileURLToPath } from 'url';
+
+// Simulasi __dirname dalam ES Module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const rl = readline.createInterface({  
     input: process.stdin,  
@@ -27,9 +31,9 @@ async function readAccessToken() {
 
 async function getProxyFromAPI() {  
     try {  
-        const response = await fetch('https://proxyscrape.com/api/v1?request=getproxies&protocol=http&ssl=yes&timeout=10000'); // Ganti dengan API penyedia proxy  
+        const response = await fetch('https://proxyscrape.com/api/v1?request=getproxies&protocol=http&ssl=yes&timeout=10000');  
         const data = await response.json();  
-        return data.proxy; // Pastikan API mengembalikan format proxy yang benar  
+        return data.proxy;  
     } catch (error) {  
         console.error('Gagal mengambil proxy dari API:', error);  
         return null;  
@@ -53,7 +57,6 @@ async function main() {
     async function coday(url, method, payloadData = null, proxy) {  
         try {  
             const agent = new HttpsProxyAgent(proxy);  
-            let response;  
             const options = {  
                 method: method,  
                 headers: headers,  
@@ -64,7 +67,7 @@ async function main() {
                 options.body = JSON.stringify(payloadData);  
             }  
 
-            response = await fetch(url, options);  
+            const response = await fetch(url, options);  
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);  
 
             return await response.json();  
@@ -171,6 +174,3 @@ async function main() {
 }  
 
 main();
-
-})();
-
