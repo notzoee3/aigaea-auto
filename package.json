@@ -1,19 +1,16 @@
 {
-  "name": "proxy-script",
-  "version": "1.0.0",
-  "description": "Script otomatis dengan proxy rotasi",
-  "main": "script.js",
-  "type": "module",
-  "dependencies": {
-    "node-fetch": "^3.3.1",
-    "https-proxy-agent": "^7.0.2",
-    "base-64": "^1.0.0"
-  },
-  "devDependencies": {},
+  "name": "airdrop-bot",
+  "version": "1.1",
+  "description": "Bot untuk auto-claim airdrop menggunakan proxy dan token.",
+  "main": "main.js",
   "scripts": {
-    "start": "node script.js"
+    "start": "node main.js"
   },
-  "keywords": ["proxy", "automation", "fetch"],
-  "author": "User",
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "https-proxy-agent": "^7.0.0"
+  },
+  "type": "module",
+  "author": "denputt",
   "license": "MIT"
 }
