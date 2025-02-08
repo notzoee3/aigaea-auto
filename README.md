@@ -10,3 +10,22 @@ Script ini secara otomatis mengambil proxy dari API penyedia proxy, melakukan au
 git clone https://github.com/notzoee3/aigaea-auto.git
 
 ```
+Konfigurasi API Proxy
+
+Buka file script.js.
+
+Ganti URL API proxy di bagian ini dengan API penyedia proxy Anda:
+
+async function getProxyFromAPI() {
+    const response = await fetch('https://proxy-provider.com/api/get-proxy'); // Ganti dengan API penyedia proxy
+    const data = await response.json();
+    return data.proxy;
+}
+
+
+# Jalankan Script
+
+```
+npm start
+```
+
