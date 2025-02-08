@@ -27,7 +27,7 @@ async function readAccessToken() {
 
 async function getProxyFromAPI() {  
     try {  
-        const response = await fetch('https://proxy-provider.com/api/get-proxy'); // Ganti dengan API penyedia proxy  
+        const response = await fetch('https://proxyscrape.com/api/v1?request=getproxies&protocol=http&ssl=yes&timeout=10000'); // Ganti dengan API penyedia proxy  
         const data = await response.json();  
         return data.proxy; // Pastikan API mengembalikan format proxy yang benar  
     } catch (error) {  
