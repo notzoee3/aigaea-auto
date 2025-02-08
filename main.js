@@ -1,6 +1,5 @@
 import fetch from 'node-fetch';
 import fs from 'fs/promises';
-import { HttpsProxyAgent } from 'https-proxy-agent';
 import path from 'path';
 import readline from 'readline';
 import crypto from 'crypto';
@@ -10,10 +9,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Import https-proxy-agent secara dinamis
+const { HttpsProxyAgent } = await import('https-proxy-agent');
+
 const rl = readline.createInterface({  
     input: process.stdin,  
     output: process.stdout  
-});  
+});
 
 function askQuestion(query) {  
     return new Promise((resolve) => rl.question(query, (answer) => resolve(answer)));  
