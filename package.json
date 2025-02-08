@@ -1,18 +1,16 @@
 {
   "name": "aigaea-auto",
   "version": "1.0.0",
-  "description": "A script to automate tasks with proxies and browser IDs",
+  "description": "Automated script for interacting with the Aigaea API",
   "main": "main.js",
-  "type": "commonjs",
   "scripts": {
     "start": "node main.js"
   },
-  "author": "denputt",
-  "license": "MIT",
   "dependencies": {
+    "node-fetch": "^3.3.1",
     "https-proxy-agent": "^5.0.1"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "type": "module",
+  "author": "Your Name",
+  "license": "MIT"
 }
