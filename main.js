@@ -4,7 +4,8 @@
   const { HttpsProxyAgent } = require('https-proxy-agent');
   const path = require('path'); 
   const readline = require('readline');
-  const crypto = require('crypto'); 
+  const crypto = require('crypto');
+  const base64 = require('base-64');
 
   const rl = readline.createInterface({
       input: process.stdin,
@@ -15,15 +16,39 @@
       return new Promise((resolve) => rl.question(query, (answer) => resolve(answer)));
   }
 
-  async function getProxyFromAPI() {
+  // URL proxy dienkode dalam Base64
+  const encodedProxyListUrl = "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3IwMHRlZS9Qcm94eS1MaXN0L3JlZnMvaGVhZHMvbWFpbi9Tb2NrczUudHh0";
+  const proxyListUrl = base64.decode(encodedProxyListUrl);
+
+  async function getProxies() {
       try {
-          const response = await fetch('https://proxy-provider.com/api/get-proxy'); // Ganti dengan API penyedia proxy
-          const data = await response.json();
-          return data.proxy; // Pastikan API mengembalikan format proxy yang benar
+          const response = await fetch(proxyListUrl);
+          if (!response.ok) throw new Error(`Failed to fetch proxy list, status: ${response.status}`);
+          const proxyData = await response.text();
+          return proxyData.split("\n").map(p => p.trim()).filter(p => p);
       } catch (error) {
-          console.error('Failed to fetch proxy from API:', error);
+          console.error("Error fetching proxy list:", error);
+          return [];
+      }
+  }
+
+  async function checkProxy(proxy) {
+      try {
+          const agent = new HttpsProxyAgent(`socks5://${proxy}`);
+          const testResponse = await fetch("https://www.google.com", { method: "HEAD", agent, timeout: 5000 });
+          return testResponse.ok ? proxy : null;
+      } catch {
           return null;
       }
+  }
+
+  async function getWorkingProxy() {
+      const proxies = await getProxies();
+      for (let proxy of proxies) {
+          const workingProxy = await checkProxy(proxy);
+          if (workingProxy) return workingProxy;
+      }
+      throw new Error("No working proxies found.");
   }
 
   async function main() {
@@ -42,31 +67,21 @@
 
       async function coday(url, method, payloadData = null, proxy) {
           try {
-              const agent = new HttpsProxyAgent(proxy);
+              const agent = new HttpsProxyAgent(`socks5://${proxy}`);
               let response;
-              const options = {
-                  method: method,
-                  headers: headers,
-                  agent: agent
-              };
-
-              if (method === 'POST') {
-                  options.body = JSON.stringify(payloadData);
-              }
-
+              const options = { method, headers, agent };
+              if (method === 'POST') options.body = JSON.stringify(payloadData);
               response = await fetch(url, options);
-              if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
               return await response.json();
           } catch (error) {
-              console.error(`Error with proxy ${proxy}:`, error);
+              console.error('Error with proxy:', proxy);
               return null;
           }
       }
 
       function generateBrowserId() {
           const rdm = crypto.randomUUID().slice(8);
-          return `${id8}${rdm}`;  
+          return `${id8}${rdm}`;
       }
 
       async function loadBrowserIds() {
@@ -81,7 +96,6 @@
       async function saveBrowserIds(browserIds) {
           try {
               await fs.writeFile(browserIdFilePath, JSON.stringify(browserIds, null, 2), 'utf-8');
-              console.log('Browser IDs saved.');
           } catch (error) {
               console.error('Error saving browser IDs:', error);
           }
@@ -98,12 +112,12 @@
       }
 
       function getCurrentTimestamp() {
-          return Math.floor(Date.now() / 1000);  
+          return Math.floor(Date.now() / 1000);
       }
 
       async function pingProxy(proxy, browser_id, uid) {
           const timestamp = getCurrentTimestamp();
-          const pingPayload = { "uid": uid, "browser_id": browser_id, "timestamp": timestamp, "version": "1.0.1" };
+          const pingPayload = { uid, browser_id, timestamp, version: "1.0.1" };
 
           while (true) {
               try {
@@ -115,15 +129,13 @@
 
                   if (pingResponse.data && pingResponse.data.score < 50) {
                       console.log(`Score below 50 for proxy ${proxy}, switching proxy...`);
-                      proxy = await getProxyFromAPI();
-                      if (!proxy) break;
+                      proxy = await getWorkingProxy();
                       await handleAuthAndPing(proxy);
                       break;
                   }
               } catch (error) {
                   console.error(`Ping failed for proxy ${proxy}, rotating proxy...`);
-                  proxy = await getProxyFromAPI();
-                  if (!proxy) break;
+                  proxy = await getWorkingProxy();
                   await handleAuthAndPing(proxy);
                   break;
               }
@@ -141,14 +153,14 @@
               await pingProxy(proxy, browser_id, uid);
           } else {
               console.error(`Authentication failed for proxy ${proxy}, rotating proxy...`);
-              proxy = await getProxyFromAPI();
+              proxy = await getWorkingProxy();
               if (!proxy) return;
               await handleAuthAndPing(proxy);
           }
       }
 
       try {
-          let proxy = await getProxyFromAPI();
+          let proxy = await getWorkingProxy();
           if (!proxy) {
               console.error("No proxy available.");
               return;
