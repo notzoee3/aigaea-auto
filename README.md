@@ -20,10 +20,14 @@ console.log(localStorage);
 ```
 
 
-2. Untuk memasukkan akses token:
+2. Untuk memasukkan akses token & browser id
 
 ```
 nano token.txt
+```
+
+```
+nano browser_id.txt
 ```
 
 Masukkan token, lalu tekan CTRL + X, Y, dan Enter.
