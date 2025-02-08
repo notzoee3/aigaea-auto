@@ -1,5 +1,5 @@
 # aigaea-auto
-link aigaea
+https://app.aigaea.net/register?ref=gaoYUGe0lhdqz7
 
 # Clone Repository 
 ```
