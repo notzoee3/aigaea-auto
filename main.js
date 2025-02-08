@@ -114,7 +114,7 @@
     }
 
     async function main() {
-        const accessToken = await readAccessToken();
+        const accessToken = await readAccessToken(token.txt);
 
         let headers = {
             'Accept': 'application/json, text/plain, */*',
