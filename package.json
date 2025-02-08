@@ -14,5 +14,5 @@
   "author": "Your Name",
   "license": "MIT"
   {
-     "type": "module"
+  "type": "module"
 }
