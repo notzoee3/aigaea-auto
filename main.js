@@ -36,15 +36,16 @@ async function getProxyFromAPI() {
         const response = await fetch('https://proxylist.geonode.com/api/proxy-list?limit=10&page=1&sort_by=lastChecked&sort_type=desc');  
         const data = await response.json();  
 
-        if (!data.data || data.data.length === 0) throw new Error("Tidak ada proxy yang tersedia.");  
+        if (!data.data || data.data.length === 0) {  
+            throw new Error("Tidak ada proxy yang tersedia.");  
+        }  
 
         const proxies = data.data.map(p => `${p.ip}:${p.port}`);
-        return proxies[Math.floor(Math.random() * proxies.length)];
+        return proxies[Math.floor(Math.random() * proxies.length)];  
     } catch (error) {  
         console.error('Gagal mengambil proxy dari API:', error.message);  
         return null;  
     }  
-}
 }
 async function main() {  
     const accessToken = await readAccessToken();  
