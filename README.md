@@ -5,6 +5,7 @@
 # Clone Repository 
 ```
 git clone https://github.com/notzoee3/aigaea-auto.git
+cd aigaea-auto
 
 ```
 
