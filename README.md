@@ -7,3 +7,6 @@ Script ini secara otomatis mengambil proxy dari API penyedia proxy, melakukan au
 
 # Instalisasi & pengunaan
 ```
+git clone https://github.com/notzoee3/aigaea-auto.git
+
+```
