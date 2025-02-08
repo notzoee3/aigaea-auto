@@ -1,5 +1,5 @@
 (async () => {
-    const fetch = (await import('node-fetch')).default;
+    const fetch = globalThis.fetch; // Node.js 18+ mendukung fetch secara global
     const fs = require('fs').promises;
     const { HttpsProxyAgent } = require('https-proxy-agent');
     const path = require('path');
@@ -27,7 +27,7 @@
 
     async function getProxyFromAPI() {
         try {
-            const response = await fetch('https://proxy-provider.com/api/get-proxy'); // Ganti dengan API penyedia proxy
+            const response = await fetch('https://proxy-provider.com/api/get-proxy'); // Ganti dengan URL penyedia proxy
             const data = await response.json();
             return data.proxy; // Pastikan API mengembalikan format proxy yang benar
         } catch (error) {
@@ -53,7 +53,6 @@
         async function coday(url, method, payloadData = null, proxy) {
             try {
                 const agent = new HttpsProxyAgent(proxy);
-                let response;
                 const options = {
                     method: method,
                     headers: headers,
@@ -64,7 +63,7 @@
                     options.body = JSON.stringify(payloadData);
                 }
 
-                response = await fetch(url, options);
+                const response = await fetch(url, options);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
                 return await response.json();
