@@ -31,22 +31,20 @@ async function readAccessToken() {
     }  
 }  
 
-async function getProxyFromAPI() {  
-    try {  
-        const response = await fetch('https://proxylist.geonode.com/api/proxy-list?limit=10&page=1&sort_by=lastChecked&sort_type=desc');  
-        const data = await response.json();  
+import fs from 'fs/promises';
 
-        if (!data.data || data.data.length === 0) {  
-            throw new Error("Tidak ada proxy yang tersedia.");  
-        }  
-
-        const proxies = data.data.map(p => `${p.ip}:${p.port}`);
-        return proxies[Math.floor(Math.random() * proxies.length)];  
-    } catch (error) {  
-        console.error('Gagal mengambil proxy dari API:', error.message);  
-        return null;  
-    }  
+async function getProxyFromFile() {
+    try {
+        const data = await fs.readFile('proxies.txt', 'utf-8');
+        const proxies = data.split('\n').map(p => p.trim()).filter(p => p);
+        return proxies.length > 0 ? proxies[Math.floor(Math.random() * proxies.length)] : null;
+    } catch (error) {
+        console.error("Gagal membaca proxies.txt:", error);
+        return null;
+    }
 }
+
+getProxyFromFile().then(proxy => console.log("Proxy yang digunakan:", proxy));
 async function main() {  
     const accessToken = await readAccessToken();  
     const id8 = await askQuestion("Enter your first 8 browserID: ");  
