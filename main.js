@@ -1,141 +1,176 @@
 (async () => {
-    // Impor modul menggunakan ES Modules
-    const fetch = (await import('node-fetch')).default;
-    const { HttpsProxyAgent } = await import('https-proxy-agent');
-    const crypto = await import('crypto');
-    const fs = await import('fs').promises;
+const fetch = (await import('node-fetch')).default;
+const fs = require('fs').promises;
+const { HttpsProxyAgent } = require('https-proxy-agent');
+const path = require('path');
+const readline = require('readline');
+const crypto = require('crypto');
 
-    async function readFileContent(fileName) {
-        try {
-            const content = await fs.readFile(fileName, 'utf-8');
-            return content.trim();
-        } catch (error) {
-            console.error(`Gagal membaca file ${fileName}:`, error);
-            process.exit(1);
-        }
-    }
+const rl = readline.createInterface({  
+    input: process.stdin,  
+    output: process.stdout  
+});  
 
-    async function readAccessToken() {
-        return await readFileContent('token.txt');
-    }
+function askQuestion(query) {  
+    return new Promise((resolve) => rl.question(query, (answer) => resolve(answer)));  
+}  
 
-    async function readBrowserIdPrefix() {
-        return await readFileContent('browser_id.txt');
-    }
+async function readAccessToken() {  
+    try {  
+        const token = await fs.readFile('token.txt', 'utf-8');  
+        return token.trim();  
+    } catch (error) {  
+        console.error('Gagal membaca token.txt:', error);  
+        process.exit(1);  
+    }  
+}  
 
-    async function getProxyFromAPI() {
-        try {
-            const response = await fetch('https://proxyscrape.com/api/v1?request=getproxies&protocol=http&ssl=yes&timeout=10000');
-            const data = await response.json();
-            return data.proxy;
-        } catch (error) {
-            console.error('Gagal mengambil proxy dari API:', error);
-            return null;
-        }
-    }
+async function getProxyFromAPI() {  
+    try {  
+        const response = await fetch('https://proxy-provider.com/api/get-proxy'); // Ganti dengan API penyedia proxy  
+        const data = await response.json();  
+        return data.proxy; // Pastikan API mengembalikan format proxy yang benar  
+    } catch (error) {  
+        console.error('Gagal mengambil proxy dari API:', error);  
+        return null;  
+    }  
+}  
 
-    async function coday(url, method, payloadData = null, proxy, headers) {
-        try {
-            const agent = new HttpsProxyAgent(proxy);
-            const options = {
-                method: method,
-                headers: headers,
-                agent: agent
-            };
+async function main() {  
+    const accessToken = await readAccessToken();  
+    const id8 = await askQuestion("Enter your first 8 browserID: ");  
 
-            if (method === 'POST') {
-                options.body = JSON.stringify(payloadData);
-            }
+    let headers = {  
+        'Accept': 'application/json, text/plain, */*',  
+        'origin': 'chrome-extension://cpjicfogbgognnifjgmenmaldnmeeeib',  
+        'Content-Type': 'application/json',  
+        'Authorization': `Bearer ${accessToken}`,  
+        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"  
+    };  
 
-            const response = await fetch(url, options);
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    const browserIdFilePath = path.join(__dirname, 'browser_ids.json');  
 
-            return await response.json();
-        } catch (error) {
-            console.error(`Error dengan proxy ${proxy}:`, error);
-            return null;
-        }
-    }
+    async function coday(url, method, payloadData = null, proxy) {  
+        try {  
+            const agent = new HttpsProxyAgent(proxy);  
+            let response;  
+            const options = {  
+                method: method,  
+                headers: headers,  
+                agent: agent  
+            };  
 
-    function generateBrowserId(prefix) {
-        const randomPart = crypto.randomUUID().slice(8);
-        return `${prefix}${randomPart}`;
-    }
+            if (method === 'POST') {  
+                options.body = JSON.stringify(payloadData);  
+            }  
 
-    function getCurrentTimestamp() {
-        return Math.floor(Date.now() / 1000);
-    }
+            response = await fetch(url, options);  
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);  
 
-    async function pingProxy(proxy, browser_id, uid, headers) {
-        const timestamp = getCurrentTimestamp();
-        const pingPayload = { "uid": uid, "browser_id": browser_id, "timestamp": timestamp, "version": "1.0.1" };
+            return await response.json();  
+        } catch (error) {  
+            console.error(`Error dengan proxy ${proxy}:`, error);  
+            return null;  
+        }  
+    }  
 
-        while (true) {
-            try {
-                const pingResponse = await coday('https://api.aigaea.net/api/network/ping', 'POST', pingPayload, proxy, headers);
-                if (!pingResponse) throw new Error("Ping request gagal");
+    function generateBrowserId() {  
+        const rdm = crypto.randomUUID().slice(8);  
+        return `${id8}${rdm}`;  
+    }  
 
-                await coday('https://api.aigaea.net/api/network/ip', 'GET', {}, proxy, headers);
-                console.log(`Ping berhasil untuk proxy ${proxy}.`);
+    async function loadBrowserIds() {  
+        try {  
+            const data = await fs.readFile(browserIdFilePath, 'utf-8');  
+            return JSON.parse(data);  
+        } catch {  
+            return {};  
+        }  
+    }  
 
-                if (pingResponse.data && pingResponse.data.score < 50) {
-                    console.log(`Score rendah (<50) untuk proxy ${proxy}, mengganti proxy...`);
-                    proxy = await getProxyFromAPI();
-                    if (!proxy) break;
-                    await handleAuthAndPing(proxy, headers);
-                    break;
-                }
-            } catch (error) {
-                console.error(`Ping gagal untuk proxy ${proxy}, mengganti proxy...`);
-                proxy = await getProxyFromAPI();
-                if (!proxy) break;
-                await handleAuthAndPing(proxy, headers);
-                break;
-            }
-            await new Promise(resolve => setTimeout(resolve, 600000));
-        }
-    }
+    async function saveBrowserIds(browserIds) {  
+        try {  
+            await fs.writeFile(browserIdFilePath, JSON.stringify(browserIds, null, 2), 'utf-8');  
+            console.log('Browser IDs disimpan.');  
+        } catch (error) {  
+            console.error('Gagal menyimpan Browser IDs:', error);  
+        }  
+    }  
 
-    async function handleAuthAndPing(proxy, headers) {
-        const authResponse = await coday("https://api.aigaea.net/api/auth/session", 'POST', {}, proxy, headers);
-        if (authResponse && authResponse.data) {
-            const uid = authResponse.data.uid;
-            const prefix = await readBrowserIdPrefix();
-            const browser_id = generateBrowserId(prefix);
-            console.log(`Berhasil autentikasi untuk proxy ${proxy} dengan uid ${uid} dan browser_id ${browser_id}`);
+    async function getBrowserId(proxy) {  
+        const browserIds = await loadBrowserIds();  
+        if (browserIds[proxy]) return browserIds[proxy];  
 
-            await pingProxy(proxy, browser_id, uid, headers);
-        } else {
-            console.error(`Autentikasi gagal untuk proxy ${proxy}, mengganti proxy...`);
-            proxy = await getProxyFromAPI();
-            if (!proxy) return;
-            await handleAuthAndPing(proxy, headers);
-        }
-    }
+        const newBrowserId = generateBrowserId();  
+        browserIds[proxy] = newBrowserId;  
+        await saveBrowserIds(browserIds);  
+        return newBrowserId;  
+    }  
 
-    async function main() {
-        const accessToken = await readAccessToken(token.txt);
+    function getCurrentTimestamp() {  
+        return Math.floor(Date.now() / 1000);  
+    }  
 
-        let headers = {
-            'Accept': 'application/json, text/plain, */*',
-            'origin': 'chrome-extension://cpjicfogbgognnifjgmenmaldnmeeeib',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-            'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
-        };
+    async function pingProxy(proxy, browser_id, uid) {  
+        const timestamp = getCurrentTimestamp();  
+        const pingPayload = { "uid": uid, "browser_id": browser_id, "timestamp": timestamp, "version": "1.0.1" };  
 
-        try {
-            let proxy = await getProxyFromAPI();
-            if (!proxy) {
-                console.error("Tidak ada proxy yang tersedia.");
-                return;
-            }
+        while (true) {  
+            try {  
+                const pingResponse = await coday('https://api.aigaea.net/api/network/ping', 'POST', pingPayload, proxy);  
+                if (!pingResponse) throw new Error("Ping request gagal");  
 
-            await handleAuthAndPing(proxy, headers);
-        } catch (error) {
-            console.error('Terjadi kesalahan:', error);
-        }
-    }
+                await coday('https://api.aigaea.net/api/network/ip', 'GET', {}, proxy);  
+                console.log(`Ping berhasil untuk proxy ${proxy}.`);  
 
-    main();
+                if (pingResponse.data && pingResponse.data.score < 50) {  
+                    console.log(`Score rendah (<50) untuk proxy ${proxy}, mengganti proxy...`);  
+                    proxy = await getProxyFromAPI();  
+                    if (!proxy) break;  
+                    await handleAuthAndPing(proxy);  
+                    break;  
+                }  
+            } catch (error) {  
+                console.error(`Ping gagal untuk proxy ${proxy}, mengganti proxy...`);  
+                proxy = await getProxyFromAPI();  
+                if (!proxy) break;  
+                await handleAuthAndPing(proxy);  
+                break;  
+            }  
+            await new Promise(resolve => setTimeout(resolve, 600000));  
+        }  
+    }  
+
+    async function handleAuthAndPing(proxy) {  
+        const authResponse = await coday("https://api.aigaea.net/api/auth/session", 'POST', {}, proxy);  
+        if (authResponse && authResponse.data) {  
+            const uid = authResponse.data.uid;  
+            const browser_id = await getBrowserId(proxy);  
+            console.log(`Berhasil autentikasi untuk proxy ${proxy} dengan uid ${uid}`);  
+
+            await pingProxy(proxy, browser_id, uid);  
+        } else {  
+            console.error(`Autentikasi gagal untuk proxy ${proxy}, mengganti proxy...`);  
+            proxy = await getProxyFromAPI();  
+            if (!proxy) return;  
+            await handleAuthAndPing(proxy);  
+        }  
+    }  
+
+    try {  
+        let proxy = await getProxyFromAPI();  
+        if (!proxy) {  
+            console.error("Tidak ada proxy yang tersedia.");  
+            return;  
+        }  
+
+        await handleAuthAndPing(proxy);  
+    } catch (error) {  
+        console.error('Terjadi kesalahan:', error);  
+    }  
+}  
+
+main();
+
 })();
+
