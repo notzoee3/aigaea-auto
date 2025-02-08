@@ -31,8 +31,6 @@ async function readAccessToken() {
     }  
 }  
 
-import fs from 'fs/promises';
-
 async function getProxyFromFile() {
     try {
         const data = await fs.readFile('proxies.txt', 'utf-8');
